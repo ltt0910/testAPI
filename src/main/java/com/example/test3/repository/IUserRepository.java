@@ -12,8 +12,8 @@ public interface IUserRepository {
     UserEntity updateUser(UserEntity user) throws SQLException;
     void deleteUser(long id) throws SQLException;
     boolean exsist(long id);
-    List<UserEntity> findAll();
-    UserEntity findById(long id);
-    List<UserEntity> findByName(String name) ;
-    List<UserEntity> findByAddress(String address);
+    List<UserEntity> findAll() throws SQLException;
+    UserEntity findById(long id) throws SQLException ;
+    List<UserEntity> findByName(String name) throws SQLException ;
+    List<UserEntity> findByAddress(String address) throws SQLException;
 }

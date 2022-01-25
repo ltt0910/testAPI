@@ -2,11 +2,14 @@ package com.example.test3.repository;
 
 import com.example.test3.entity.UserEntity;
 import com.example.test3.singleton.HikariConfigCustom;
-import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.springframework.data.relational.core.sql.SQL;
 import org.springframework.stereotype.Repository;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,6 +17,7 @@ import java.util.List;
 public class UserRepository implements IUserRepository {
 
     private static HikariDataSource dataSource = new HikariDataSource(HikariConfigCustom.getInstance());
+
     @Override
     public UserEntity insertUser(UserEntity user) throws SQLException {
         Connection conn = null;
@@ -120,43 +124,35 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public List<UserEntity> findAll() {
+    public List<UserEntity> findAll() throws SQLException {
         List<UserEntity> user = new ArrayList<>();
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        try {
-            String QUERY = "SELECT id, fullname, age, address FROM User";
-            conn = dataSource.getConnection();
-            stmt = conn.prepareStatement(QUERY);
-            rs = stmt.executeQuery();
-            while (rs.next()) {
-                UserEntity userEntity = new UserEntity();
-                userEntity.setId(rs.getInt("id"));
-                userEntity.setAge(rs.getInt("age"));
-                userEntity.setFullname(rs.getString("fullname"));
-                userEntity.setAddress(rs.getString("address"));
-                user.add(userEntity);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (conn != null) {
-                    conn.close();
-                }
-                if (stmt != null) {
-                    stmt.close();
-                }
-                if (rs != null) {
-                    rs.close();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        String QUERY = "SELECT id, fullname, age, address FROM User";
+        conn = dataSource.getConnection();
+        stmt = conn.prepareStatement(QUERY);
+        rs = stmt.executeQuery();
+        while (rs.next()) {
+            UserEntity userEntity = new UserEntity();
+            userEntity.setId(rs.getInt("id"));
+            userEntity.setAge(rs.getInt("age"));
+            userEntity.setFullname(rs.getString("fullname"));
+            userEntity.setAddress(rs.getString("address"));
+            user.add(userEntity);
+        }
+        if (conn != null) {
+            conn.close();
+        }
+        if (stmt != null) {
+            stmt.close();
+        }
+        if (rs != null) {
+            rs.close();
         }
         return user;
     }
+
 
     @Override
     public boolean exsist(long id) {
@@ -193,111 +189,89 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public UserEntity findById(long id) {
+    public UserEntity findById(long id) throws SQLException {
         UserEntity userEntity = new UserEntity();
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        try {
-            String QUERY = "SELECT id, fullname, age, address FROM User WHERE  id = ?";
-            conn = dataSource.getConnection();
-            stmt = conn.prepareStatement(QUERY);
-            stmt.setLong(1, id);
-            rs = stmt.executeQuery();
-            while (rs.next()) {
-                userEntity.setId(rs.getInt("id"));
-                userEntity.setAge(rs.getInt("age"));
-                userEntity.setFullname(rs.getString("fullname"));
-                userEntity.setAddress(rs.getString("address"));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (conn != null)
-                    conn.close();
-                if (stmt != null)
-                    stmt.close();
-                if (rs != null)
-                    rs.close();
-            } catch (SQLException se) {
-                se.getMessage();
-            }
+        String QUERY = "SELECT id, fullname, age, address FROM User WHERE  id = ?";
+        conn = dataSource.getConnection();
+        stmt = conn.prepareStatement(QUERY);
+        stmt.setLong(1, id);
+        rs = stmt.executeQuery();
+        while (rs.next()) {
+            userEntity.setId(rs.getInt("id"));
+            userEntity.setAge(rs.getInt("age"));
+            userEntity.setFullname(rs.getString("fullname"));
+            userEntity.setAddress(rs.getString("address"));
+        }
+        if (conn != null) {
+            conn.close();
+        }
+        if (stmt != null) {
+            stmt.close();
+        }
+        if (rs != null) {
+            rs.close();
         }
         return userEntity;
     }
 
     @Override
-    public List<UserEntity> findByName(String name) {
+    public List<UserEntity> findByName(String name) throws SQLException {
         List<UserEntity> user = new ArrayList<>();
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        try {
-            String QUERY = "SELECT id, fullname, age, address FROM User WHERE  fullname like ?";
-            conn = dataSource.getConnection();
-            stmt = conn.prepareStatement(QUERY);
-            stmt.setString(1, name);
-            rs = stmt.executeQuery();
-            while (rs.next()) {
-                UserEntity userEntity = new UserEntity();
-                userEntity.setId(rs.getInt("id"));
-                userEntity.setAge(rs.getInt("age"));
-                userEntity.setFullname(rs.getString("fullname"));
-                userEntity.setAddress(rs.getString("address"));
-                user.add(userEntity);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (conn != null)
-                    conn.close();
-                if (stmt != null)
-                    stmt.close();
-                if (rs != null)
-                    rs.close();
-            } catch (SQLException se) {
-                se.getMessage();
-            }
+        String QUERY = "SELECT id, fullname, age, address FROM User WHERE  fullname like ?";
+        conn = dataSource.getConnection();
+        stmt = conn.prepareStatement(QUERY);
+        stmt.setString(1, name);
+        rs = stmt.executeQuery();
+        while (rs.next()) {
+            UserEntity userEntity = new UserEntity();
+            userEntity.setId(rs.getInt("id"));
+            userEntity.setAge(rs.getInt("age"));
+            userEntity.setFullname(rs.getString("fullname"));
+            userEntity.setAddress(rs.getString("address"));
+            user.add(userEntity);
         }
+        if (conn != null)
+            conn.close();
+        if (stmt != null)
+            stmt.close();
+        if (rs != null)
+            rs.close();
+
         return user;
     }
 
     @Override
-    public List<UserEntity> findByAddress(String address) {
+    public List<UserEntity> findByAddress(String address) throws SQLException {
         List<UserEntity> user = new ArrayList<>();
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        try {
-            String QUERY = "SELECT id, fullname, age, address FROM User WHERE  address like ?";
-            conn = dataSource.getConnection();
-            stmt = conn.prepareStatement(QUERY);
-            stmt.setString(1, address);
-            rs = stmt.executeQuery();
-            while (rs.next()) {
-                UserEntity userEntity = new UserEntity();
-                userEntity.setId(rs.getInt("id"));
-                userEntity.setAge(rs.getInt("age"));
-                userEntity.setFullname(rs.getString("fullname"));
-                userEntity.setAddress(rs.getString("address"));
-                user.add(userEntity);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (conn != null)
-                    conn.close();
-                if (stmt != null)
-                    stmt.close();
-                if (rs != null)
-                    rs.close();
-            } catch (SQLException se) {
-                se.getMessage();
-            }
+        String QUERY = "SELECT id, fullname, age, address FROM User WHERE  address like ?";
+        conn = dataSource.getConnection();
+        stmt = conn.prepareStatement(QUERY);
+        stmt.setString(1, address);
+        rs = stmt.executeQuery();
+        while (rs.next()) {
+            UserEntity userEntity = new UserEntity();
+            userEntity.setId(rs.getInt("id"));
+            userEntity.setAge(rs.getInt("age"));
+            userEntity.setFullname(rs.getString("fullname"));
+            userEntity.setAddress(rs.getString("address"));
+            user.add(userEntity);
         }
+        if (conn != null)
+            conn.close();
+        if (stmt != null)
+            stmt.close();
+        if (rs != null)
+            rs.close();
+
         return user;
     }
 
