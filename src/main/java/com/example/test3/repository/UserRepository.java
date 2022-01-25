@@ -1,6 +1,7 @@
 package com.example.test3.repository;
 
 import com.example.test3.entity.UserEntity;
+import com.example.test3.singleton.HikariConfigCustom;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.stereotype.Repository;
@@ -12,19 +13,7 @@ import java.util.List;
 @Repository
 public class UserRepository implements IUserRepository {
 
-    private static HikariDataSource dataSource = null;
-
-    static {
-
-        HikariConfig config = new HikariConfig();
-        config.setJdbcUrl("jdbc:mysql://localhost:3306/vccorp");
-        config.setUsername("root");
-        config.setPassword("123456");
-        config.addDataSourceProperty("minimumIdle", "5");
-        config.addDataSourceProperty("maximumPoolSize", "15");
-        dataSource = new HikariDataSource(config);
-    }
-
+    private static HikariDataSource dataSource = new HikariDataSource(HikariConfigCustom.getInstance());
     @Override
     public UserEntity insertUser(UserEntity user) throws SQLException {
         Connection conn = null;
@@ -45,15 +34,15 @@ public class UserRepository implements IUserRepository {
         } catch (SQLException e) {
             e.printStackTrace();
             conn.rollback();
-        }finally {
+        } finally {
             try {
-                if(conn!=null){
+                if (conn != null) {
                     conn.close();
                 }
-                if(stmt!=null){
+                if (stmt != null) {
                     stmt.close();
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
 
             }
@@ -62,10 +51,10 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public UserEntity updateUser(UserEntity user) throws  SQLException{
+    public UserEntity updateUser(UserEntity user) throws SQLException {
         Connection conn = null;
         PreparedStatement stmt = null;
-        try{
+        try {
             conn = dataSource.getConnection();
             conn.setAutoCommit(false);
             String sql = "UPDATE User SET fullname = ?,age = ?,address =? WHERE  id = ?;";
@@ -83,15 +72,15 @@ public class UserRepository implements IUserRepository {
         } catch (SQLException e) {
             e.printStackTrace();
             conn.rollback();
-        }finally {
+        } finally {
             try {
-                if(conn!=null){
+                if (conn != null) {
                     conn.close();
                 }
-                if(stmt!=null){
+                if (stmt != null) {
                     stmt.close();
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -99,15 +88,15 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public void deleteUser(long id) throws  SQLException {
+    public void deleteUser(long id) throws SQLException {
         Connection conn = null;
         PreparedStatement stmt = null;
-        try{
+        try {
             conn = dataSource.getConnection();
             conn.setAutoCommit(false);
             String sql = "DELETE FROM User WHERE id = ?;";
             stmt = conn.prepareStatement(sql);
-            stmt.setLong(1,id);
+            stmt.setLong(1, id);
             System.out.println("Xóa dữ liệu");
             stmt.executeUpdate();
 
@@ -116,15 +105,15 @@ public class UserRepository implements IUserRepository {
         } catch (SQLException e) {
             e.printStackTrace();
             conn.rollback();
-        }finally {
+        } finally {
             try {
-                if(conn!=null){
+                if (conn != null) {
                     conn.close();
                 }
-                if(stmt!=null){
+                if (stmt != null) {
                     stmt.close();
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -136,12 +125,12 @@ public class UserRepository implements IUserRepository {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        try{
+        try {
             String QUERY = "SELECT id, fullname, age, address FROM User";
             conn = dataSource.getConnection();
             stmt = conn.prepareStatement(QUERY);
             rs = stmt.executeQuery();
-            while(rs.next()){
+            while (rs.next()) {
                 UserEntity userEntity = new UserEntity();
                 userEntity.setId(rs.getInt("id"));
                 userEntity.setAge(rs.getInt("age"));
@@ -151,18 +140,18 @@ public class UserRepository implements IUserRepository {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             try {
-                if(conn!=null){
+                if (conn != null) {
                     conn.close();
                 }
-                if(stmt!=null){
+                if (stmt != null) {
                     stmt.close();
                 }
-                if(rs!=null){
+                if (rs != null) {
                     rs.close();
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -170,33 +159,33 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public boolean exsist(long id){
+    public boolean exsist(long id) {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        try{
+        try {
             String QUERY = "SELECT id, fullname, age, address FROM User WHERE  id = ?";
             conn = dataSource.getConnection();
             stmt = conn.prepareStatement(QUERY);
-            stmt.setLong(1,id);
+            stmt.setLong(1, id);
             rs = stmt.executeQuery();
-            if (rs.next() ) {
+            if (rs.next()) {
                 return true;
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             try {
-                if(conn!=null){
+                if (conn != null) {
                     conn.close();
                 }
-                if(stmt!=null){
+                if (stmt != null) {
                     stmt.close();
                 }
-                if(rs!=null){
+                if (rs != null) {
                     rs.close();
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -204,7 +193,7 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public UserEntity findById(long id){
+    public UserEntity findById(long id) {
         UserEntity userEntity = new UserEntity();
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -213,9 +202,9 @@ public class UserRepository implements IUserRepository {
             String QUERY = "SELECT id, fullname, age, address FROM User WHERE  id = ?";
             conn = dataSource.getConnection();
             stmt = conn.prepareStatement(QUERY);
-            stmt.setLong(1,id);
+            stmt.setLong(1, id);
             rs = stmt.executeQuery();
-            while (rs.next() ) {
+            while (rs.next()) {
                 userEntity.setId(rs.getInt("id"));
                 userEntity.setAge(rs.getInt("age"));
                 userEntity.setFullname(rs.getString("fullname"));
@@ -223,8 +212,7 @@ public class UserRepository implements IUserRepository {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        }
-        finally {
+        } finally {
             try {
                 if (conn != null)
                     conn.close();
@@ -249,9 +237,9 @@ public class UserRepository implements IUserRepository {
             String QUERY = "SELECT id, fullname, age, address FROM User WHERE  fullname like ?";
             conn = dataSource.getConnection();
             stmt = conn.prepareStatement(QUERY);
-            stmt.setString(1,name);
+            stmt.setString(1, name);
             rs = stmt.executeQuery();
-            while (rs.next() ) {
+            while (rs.next()) {
                 UserEntity userEntity = new UserEntity();
                 userEntity.setId(rs.getInt("id"));
                 userEntity.setAge(rs.getInt("age"));
@@ -261,8 +249,7 @@ public class UserRepository implements IUserRepository {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        }
-        finally {
+        } finally {
             try {
                 if (conn != null)
                     conn.close();
@@ -287,9 +274,9 @@ public class UserRepository implements IUserRepository {
             String QUERY = "SELECT id, fullname, age, address FROM User WHERE  address like ?";
             conn = dataSource.getConnection();
             stmt = conn.prepareStatement(QUERY);
-            stmt.setString(1,address);
+            stmt.setString(1, address);
             rs = stmt.executeQuery();
-            while (rs.next() ) {
+            while (rs.next()) {
                 UserEntity userEntity = new UserEntity();
                 userEntity.setId(rs.getInt("id"));
                 userEntity.setAge(rs.getInt("age"));
@@ -299,8 +286,7 @@ public class UserRepository implements IUserRepository {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        }
-        finally {
+        } finally {
             try {
                 if (conn != null)
                     conn.close();
