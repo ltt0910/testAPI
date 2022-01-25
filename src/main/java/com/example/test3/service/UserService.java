@@ -22,27 +22,38 @@ public class UserService implements IUserService{
 
     @Override
     public UserModel addUser(UserModel userModel) {
-        if(!userRepository.exsist(userModel.getId()) && checkValidate(userModel)){
-            UserEntity user  = userRepository.insertUser(userConverter.convertToEntity(userModel));
-            return userConverter.convertToModel(user);
+        try {
+            if(!userRepository.exsist(userModel.getId()) && checkValidate(userModel)){
+                UserEntity user  = userRepository.insertUser(userConverter.convertToEntity(userModel));
+                return userConverter.convertToModel(user);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
         }
         return new UserModel();
-
     }
 
     @Override
-    public UserModel updateUser(UserModel userModel){
-        if(userRepository.exsist(userModel.getId()) && checkValidate(userModel)){
-            UserEntity user  = userRepository.updateUser(userConverter.convertToEntity(userModel));
-            return userConverter.convertToModel(user);
+    public UserModel updateUser(UserModel userModel) {
+        try {
+            if(userRepository.exsist(userModel.getId()) && checkValidate(userModel)){
+                UserEntity user  = userRepository.updateUser(userConverter.convertToEntity(userModel));
+                return userConverter.convertToModel(user);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
         }
        return new UserModel();
     }
 
     @Override
     public void deleteUser(long id){
-        if(userRepository.exsist(id)){
-            userRepository.deleteUser(id);
+        try {
+            if(userRepository.exsist(id)){
+                userRepository.deleteUser(id);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
         }
     }
 

@@ -1,6 +1,8 @@
 package com.example.test3.repository;
 
 import com.example.test3.entity.UserEntity;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
@@ -10,61 +12,135 @@ import java.util.List;
 @Repository
 public class UserRepository implements IUserRepository {
 
-    static final String DB_URL = "jdbc:mysql://localhost:3306/vccorp";
-    static final String USER = "root";
-    static final String PASS = "123456";
+    private static HikariDataSource dataSource = null;
+
+    static {
+
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl("jdbc:mysql://localhost:3306/vccorp");
+        config.setUsername("root");
+        config.setPassword("123456");
+        config.addDataSourceProperty("minimumIdle", "5");
+        config.addDataSourceProperty("maximumPoolSize", "15");
+        dataSource = new HikariDataSource(config);
+    }
 
     @Override
-    public UserEntity insertUser(UserEntity user){
-        try(Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
-            Statement stmt = conn.createStatement();
-        ) {
+    public UserEntity insertUser(UserEntity user) throws SQLException {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        try {
             System.out.println("Thêm dữ liệu");
-            String sql = "INSERT INTO User(fullname,age,address) VALUES ('"+user.getFullname()+"', "+user.getAge()+", '"+user.getAddress()+"');";
-            stmt.executeUpdate(sql);
-
+            conn = dataSource.getConnection();
+            conn.setAutoCommit(false);
+            String sql = "INSERT INTO User(fullname,age,address) VALUES (?,?,?);";
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, user.getFullname());
+            stmt.setInt(2, user.getAge());
+            stmt.setString(3, user.getAddress());
+            stmt.executeUpdate();
+            conn.commit();
+            // nen tra lai default mode cho JDBC khi thuc thi xong
+            conn.setAutoCommit(true);
         } catch (SQLException e) {
             e.printStackTrace();
+            conn.rollback();
+        }finally {
+            try {
+                if(conn!=null){
+                    conn.close();
+                }
+                if(stmt!=null){
+                    stmt.close();
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+
+            }
         }
         return user;
     }
 
     @Override
-    public UserEntity updateUser(UserEntity user){
-        try(Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
-            Statement stmt = conn.createStatement();
-        ) {
+    public UserEntity updateUser(UserEntity user) throws  SQLException{
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        try{
+            conn = dataSource.getConnection();
+            conn.setAutoCommit(false);
+            String sql = "UPDATE User SET fullname = ?,age = ?,address =? WHERE  id = ?;";
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, user.getFullname());
+            stmt.setInt(2, user.getAge());
+            stmt.setString(3, user.getAddress());
+            stmt.setLong(4, user.getId());
+            stmt.executeUpdate();
             System.out.println("Sửa dữ liệu");
-            String sql = "UPDATE User SET fullname = '"+user.getFullname()+"',age = "+user.getAge()+",address = '"+user.getAddress()+"' WHERE  id = "+user.getId()+";";
-            stmt.executeUpdate(sql);
+            //bat commit
+            conn.commit();
+            //set lại auto Commit con conn
+            conn.setAutoCommit(true);
         } catch (SQLException e) {
             e.printStackTrace();
+            conn.rollback();
+        }finally {
+            try {
+                if(conn!=null){
+                    conn.close();
+                }
+                if(stmt!=null){
+                    stmt.close();
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
         }
         return user;
     }
 
     @Override
-    public void deleteUser(long id) {
-        try(Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
-            Statement stmt = conn.createStatement();
-        ) {
-
+    public void deleteUser(long id) throws  SQLException {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        try{
+            conn = dataSource.getConnection();
+            conn.setAutoCommit(false);
+            String sql = "DELETE FROM User WHERE id = ?;";
+            stmt = conn.prepareStatement(sql);
+            stmt.setLong(1,id);
             System.out.println("Xóa dữ liệu");
-            String sql = "DELETE FROM User WHERE id = "+id+";";
-            stmt.executeUpdate(sql);
-        } catch (SQLException e) {
+            stmt.executeUpdate();
 
+            conn.commit();
+            conn.setAutoCommit(true);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            conn.rollback();
+        }finally {
+            try {
+                if(conn!=null){
+                    conn.close();
+                }
+                if(stmt!=null){
+                    stmt.close();
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
         }
     }
 
     @Override
     public List<UserEntity> findAll(){
         List<UserEntity> user = new ArrayList<>();
-        String QUERY = "SELECT id, fullname, age, address FROM User";
-        try(Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(QUERY);
-        ) {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try{
+            String QUERY = "SELECT id, fullname, age, address FROM User";
+            conn = dataSource.getConnection();
+            stmt = conn.prepareStatement(QUERY);
+            rs = stmt.executeQuery();
             while(rs.next()){
                 UserEntity userEntity = new UserEntity();
                 userEntity.setId(rs.getInt("id"));
@@ -75,37 +151,70 @@ public class UserRepository implements IUserRepository {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        }finally {
+            try {
+                if(conn!=null){
+                    conn.close();
+                }
+                if(stmt!=null){
+                    stmt.close();
+                }
+                if(rs!=null){
+                    rs.close();
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
         }
         return user;
     }
 
     @Override
     public boolean exsist(long id){
-        String QUERY = "SELECT id, fullname, age, address FROM User WHERE  id = "+id+"";
-        try(Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(QUERY);
-        ) {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try{
+            String QUERY = "SELECT id, fullname, age, address FROM User WHERE  id = ?";
+            conn = dataSource.getConnection();
+            stmt = conn.prepareStatement(QUERY);
+            stmt.setLong(1,id);
+            rs = stmt.executeQuery();
             if (rs.next() ) {
                 return true;
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        }finally {
+            try {
+                if(conn!=null){
+                    conn.close();
+                }
+                if(stmt!=null){
+                    stmt.close();
+                }
+                if(rs!=null){
+                    rs.close();
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
         }
         return false;
     }
 
     @Override
     public UserEntity findById(long id){
-        String QUERY = "SELECT id, fullname, age, address FROM User WHERE  id = "+id+"";
         UserEntity userEntity = new UserEntity();
         Connection conn = null;
-        Statement stmt = null;
+        PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            conn = DriverManager.getConnection(DB_URL, USER, PASS);
-            stmt = conn.createStatement();
-            rs = stmt.executeQuery(QUERY);
+            String QUERY = "SELECT id, fullname, age, address FROM User WHERE  id = ?";
+            conn = dataSource.getConnection();
+            stmt = conn.prepareStatement(QUERY);
+            stmt.setLong(1,id);
+            rs = stmt.executeQuery();
             while (rs.next() ) {
                 userEntity.setId(rs.getInt("id"));
                 userEntity.setAge(rs.getInt("age"));
@@ -133,12 +242,16 @@ public class UserRepository implements IUserRepository {
     @Override
     public List<UserEntity> findByName(String name) {
         List<UserEntity> user = new ArrayList<>();
-        String QUERY = "SELECT id, fullname, age, address FROM User WHERE fullname like '%"+name+"%'";
-        try(Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(QUERY);
-        ) {
-            while(rs.next()){
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            String QUERY = "SELECT id, fullname, age, address FROM User WHERE  fullname like ?";
+            conn = dataSource.getConnection();
+            stmt = conn.prepareStatement(QUERY);
+            stmt.setString(1,name);
+            rs = stmt.executeQuery();
+            while (rs.next() ) {
                 UserEntity userEntity = new UserEntity();
                 userEntity.setId(rs.getInt("id"));
                 userEntity.setAge(rs.getInt("age"));
@@ -148,6 +261,18 @@ public class UserRepository implements IUserRepository {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+        finally {
+            try {
+                if (conn != null)
+                    conn.close();
+                if (stmt != null)
+                    stmt.close();
+                if (rs != null)
+                    rs.close();
+            } catch (SQLException se) {
+                se.getMessage();
+            }
         }
         return user;
     }
@@ -155,12 +280,16 @@ public class UserRepository implements IUserRepository {
     @Override
     public List<UserEntity> findByAddress(String address) {
         List<UserEntity> user = new ArrayList<>();
-        String QUERY = "SELECT id, fullname, age, address FROM User WHERE address like '%"+address+"%'";
-        try(Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(QUERY);
-        ) {
-            while(rs.next()){
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            String QUERY = "SELECT id, fullname, age, address FROM User WHERE  address like ?";
+            conn = dataSource.getConnection();
+            stmt = conn.prepareStatement(QUERY);
+            stmt.setString(1,address);
+            rs = stmt.executeQuery();
+            while (rs.next() ) {
                 UserEntity userEntity = new UserEntity();
                 userEntity.setId(rs.getInt("id"));
                 userEntity.setAge(rs.getInt("age"));
@@ -171,8 +300,19 @@ public class UserRepository implements IUserRepository {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        finally {
+            try {
+                if (conn != null)
+                    conn.close();
+                if (stmt != null)
+                    stmt.close();
+                if (rs != null)
+                    rs.close();
+            } catch (SQLException se) {
+                se.getMessage();
+            }
+        }
         return user;
     }
-
 
 }
