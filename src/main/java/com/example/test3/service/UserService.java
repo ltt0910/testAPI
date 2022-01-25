@@ -30,7 +30,7 @@ public class UserService implements IUserService{
         }catch (Exception e){
             e.printStackTrace();
         }
-        return new UserModel();
+        return null;
     }
 
     @Override
@@ -43,7 +43,7 @@ public class UserService implements IUserService{
         }catch (Exception e){
             e.printStackTrace();
         }
-       return new UserModel();
+       return null;
     }
 
     @Override
@@ -67,7 +67,7 @@ public class UserService implements IUserService{
             }
             return userModels;
         }
-       return new ArrayList<>();
+       return userModels;
     }
 
     @Override
@@ -75,7 +75,7 @@ public class UserService implements IUserService{
         if(userRepository.exsist(id)){
             return userConverter.convertToModel(userRepository.findById(id));
         }
-        return new UserModel();
+        return null;
     }
 
     @Override
@@ -88,7 +88,7 @@ public class UserService implements IUserService{
             }
             return userModels;
         }
-        return new ArrayList<>();
+        return userModels;
     }
 
     @Override
@@ -101,7 +101,7 @@ public class UserService implements IUserService{
             }
             return userModels;
         }
-        return new ArrayList<>();
+        return userModels;
     }
 
     public boolean checkValidate(UserModel userModel){

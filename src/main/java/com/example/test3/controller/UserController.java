@@ -1,8 +1,11 @@
 package com.example.test3.controller;
 
 import com.example.test3.model.UserModel;
+import com.example.test3.response.ResponseCustom;
 import com.example.test3.service.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -17,88 +20,88 @@ public class UserController {
     private IUserService userService;
 
     @GetMapping
-    public  List<UserModel> findAll() throws Exception{
+    public ResponseEntity<Object> findAll() {
         List<UserModel> userModels = new ArrayList<>();
-        try {
-             userModels = userService.findAll();
-
-        }catch (Exception e){
-            e.printStackTrace();
+        userModels = userService.findAll();
+        if (userModels.size() > 0) {
+            return ResponseCustom.response("Get data thành công", HttpStatus.OK, userModels, 1);
         }
-        return userModels;
+        return ResponseCustom.response("Không có dữ liệu", HttpStatus.NOT_FOUND, null, 1);
     }
+
     @PostMapping
-    public UserModel addUser(@Valid @RequestBody UserModel user) throws Exception{
-        UserModel userModel = new UserModel();
+    public ResponseEntity<Object> addUser(@Valid @RequestBody UserModel user) {
         try {
-             userModel =  userService.addUser(user);
-        }catch (Exception e){
-            e.printStackTrace();
+            Object userModel = new UserModel();
+            userModel = userService.addUser(user);
+            if (userModel != null) {
+                return ResponseCustom.response("Thêm thành công", HttpStatus.CREATED, userModel, 1);
+            }
+        } catch (Exception e) {
+            return ResponseCustom.response(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, null, 0);
         }
-        return userModel;
+        return ResponseCustom.response("Lỗi", HttpStatus.INTERNAL_SERVER_ERROR, null, 0);
     }
 
     @PutMapping
-    public UserModel updateUser(@Valid @RequestBody UserModel user) throws Exception{
-        UserModel userModel = new UserModel();
-        try {
-            userModel =  userService.updateUser(user);
-        }catch (Exception e){
-            e.printStackTrace();
+    public ResponseEntity<Object> updateUser(@Valid @RequestBody UserModel user) {
+        Object userModel = new UserModel();
+        userModel = userService.updateUser(user);
+        if (userModel != null) {
+            return ResponseCustom.response("Sửa thành công", HttpStatus.OK, userModel, 1);
         }
-        return userModel;
+        return ResponseCustom.response("Lỗi", HttpStatus.INTERNAL_SERVER_ERROR, null, 0);
     }
 
     @DeleteMapping
-    public void deleteBuildingById(@RequestParam long[] ids) throws Exception {
+    public ResponseEntity<Object> deleteBuildingById(@RequestParam long[] ids) throws Exception {
         try {
-            for(long id:ids){
+            for (long id : ids) {
                 userService.deleteUser(id);
             }
-        }catch (Exception e){
+            return ResponseCustom.response("Xóa thành công", HttpStatus.OK, "", 1);
+        } catch (Exception e) {
             e.printStackTrace();
+            return ResponseCustom.response("Lỗi", HttpStatus.MULTI_STATUS, "", 0);
         }
 
     }
 
     @GetMapping("/{id}")
-    public UserModel findById(@PathVariable long id) throws Exception{
+    public ResponseEntity<Object> findById(@PathVariable long id) {
         UserModel userModel = new UserModel();
-        try {
-            userModel =  userService.findById(id);
-        }catch (Exception e){
-            e.printStackTrace();
+        userModel = userService.findById(id);
+        if (userModel != null) {
+            return ResponseCustom.response("Get Data thành công", HttpStatus.OK, userModel, 1);
         }
-        return userModel;
+        return ResponseCustom.response("Không có dữ liệu", HttpStatus.NOT_FOUND, null, 1);
     }
 
     @GetMapping(value = "/user")
-    public List<UserModel> findByAddress(@RequestParam(value="address") String address){
+    public ResponseEntity<Object> findByAddress(@RequestParam(value = "address") String address) {
         List<UserModel> userModel = new ArrayList<>();
-        try {
-            userModel =  userService.findByAddress(address);
-        }catch (Exception e){
-            e.printStackTrace();
+        userModel = userService.findByAddress(address);
+        if (userModel.size() > 0) {
+            return ResponseCustom.response("Get Data thành công", HttpStatus.OK, userModel, 1);
         }
-        return userModel;
+        return ResponseCustom.response("Không có dữ liệu", HttpStatus.NOT_FOUND, null, 1);
     }
 
     @GetMapping(value = "/")
-    public List<UserModel> findByName(@RequestParam(value="name") String name) throws Exception{
+    public ResponseEntity<Object> findByName(@RequestParam(value = "name") String name) {
         List<UserModel> userModel = new ArrayList<>();
-        try {
-            userModel =  userService.findByName(name);
-        }catch (Exception e){
-            e.printStackTrace();
+        userModel = userService.findByName(name);
+        if (userModel.size() > 0) {
+            return ResponseCustom.response("Get Data thành công", HttpStatus.OK, userModel, 1);
         }
-        return userModel;
+        return ResponseCustom.response("Không có dữ liệu", HttpStatus.NOT_FOUND, null, 1);
     }
 
     @GetMapping(value = "/sort")
-    public List<UserModel> sortByName(){
-        if(userService.sortByName()!=null){
-            return userService.sortByName();
+    public ResponseEntity<Object> sortByName() {
+        if (userService.sortByName() != null) {
+            return ResponseCustom.response("Sắp xếp thành công", HttpStatus.OK, userService.sortByName(), 1);
         }
-        return new ArrayList<>();
+        return ResponseCustom.response("Lỗi", HttpStatus.MULTI_STATUS, null, 0);
     }
 }

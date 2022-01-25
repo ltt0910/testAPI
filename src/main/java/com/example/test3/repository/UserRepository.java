@@ -131,7 +131,7 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public List<UserEntity> findAll(){
+    public List<UserEntity> findAll() {
         List<UserEntity> user = new ArrayList<>();
         Connection conn = null;
         PreparedStatement stmt = null;
