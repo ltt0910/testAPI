@@ -1,9 +1,5 @@
 package com.example.test3.response;
 
-import com.example.test3.model.UserModel;
-
-import java.util.List;
-
 public class ResponseCustom  {
 
     private int status;
