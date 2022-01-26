@@ -1,6 +1,9 @@
 package com.example.test3.controller;
 
-import com.example.test3.exception.FieldNoVaildException;
+import com.example.test3.exception.FieldErrorException;
+import com.example.test3.exception.UserExsitsException;
+import com.example.test3.exception.UserInfoException;
+import com.example.test3.global.ErrorCode;
 import com.example.test3.model.UserModel;
 import com.example.test3.response.ResponseCustom;
 import com.example.test3.service.IUserService;
@@ -10,9 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import javax.validation.ValidationException;
+import java.io.FileNotFoundException;
 import java.sql.SQLException;
-import java.sql.SQLSyntaxErrorException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,141 +27,198 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<Object> findAll() {
+        ResponseCustom res = new ResponseCustom();
         try {
             List<UserModel> userModels = new ArrayList<>();
             userModels = userService.findAll();
-            return ResponseCustom.response("Get data thành công", HttpStatus.OK, userModels, 1);
+            res.setCode(1);
+            res.setStatus(HttpStatus.OK.value());
+            res.setMessage("Get data thành công");
+            res.setData(userModels);
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        } catch (SQLException e) {
+            res.setMessage("Lỗi truy vấn");
+            res.setStatus(HttpStatus.resolve(501).value());
+            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
-            if (e instanceof SQLSyntaxErrorException) {
-                return ResponseCustom.response("Lỗi Truy Vấn", HttpStatus.BAD_REQUEST, null, 0);
-            } else if (e instanceof SQLException) {
-                return ResponseCustom.response("Lỗi CSDL", HttpStatus.BAD_REQUEST, null, 0);
-            } else {
-                return ResponseCustom.response("Lỗi hệ thống", HttpStatus.INTERNAL_SERVER_ERROR, null, 0);
-            }
+            res.setMessage("Lỗi hệ thống");
+            res.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            return new ResponseEntity<>(res, HttpStatus.OK);
         }
     }
 
     @PostMapping
     public ResponseEntity<Object> addUser(@Valid @RequestBody UserModel user) {
+        ResponseCustom res = new ResponseCustom();
         try {
             Object userModel = new UserModel();
             userModel = userService.addUser(user);
-            return (userModel != null) ? ResponseCustom.response("Thêm thành công", HttpStatus.CREATED, userModel, 1)
-                    : ResponseCustom.response("Đã tồn tại User", HttpStatus.FOUND, null, 0);
+            res.setData(user);
+            res.setCode(1);
+            res.setMessage("Thành công");
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        } catch (UserInfoException uie) {
+            res.setStatus(uie.getCode());
+            res.setMessage(uie.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        } catch (UserExsitsException ex) {
+            res.setStatus(ex.getCode());
+            res.setMessage(ex.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.OK);
         } catch (Exception e) {
-            if (e instanceof ValidationException) {
-                return ResponseCustom.response("Các trường không hợp lệ", HttpStatus.MULTI_STATUS, null, 0);
-            } else if (e instanceof SQLException || e instanceof SQLSyntaxErrorException) {
-                return ResponseCustom.response("Lỗi CSDL", HttpStatus.BAD_REQUEST, null, 0);
-            } else {
-                return ResponseCustom.response("Lỗi", HttpStatus.INTERNAL_SERVER_ERROR, null, 0);
-            }
+            res.setMessage("Lỗi hệ thống");
+            res.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            return new ResponseEntity<>(res, HttpStatus.OK);
         }
     }
 
     @PutMapping
     public ResponseEntity<Object> updateUser(@Valid @RequestBody UserModel user) {
+        ResponseCustom res = new ResponseCustom();
         try {
             Object userModel = new UserModel();
             userModel = userService.updateUser(user);
-            return (userModel != null) ? ResponseCustom.response("Sửa thành công", HttpStatus.OK, userModel, 1)
-                    : ResponseCustom.response("User không tồn tại", HttpStatus.NOT_FOUND, null, 0);
+            res.setCode(1);
+            res.setStatus(HttpStatus.OK.value());
+            res.setData(userModel);
+            res.setMessage("Update thành công");
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        } catch (FieldErrorException fee) {
+            res.setStatus(ErrorCode.CHARACTER_ERROR);
+            res.setMessage(fee.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        } catch (UserInfoException uie) {
+            res.setStatus(ErrorCode.INVALID_USER_INFO);
+            res.setMessage(uie.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        } catch (FileNotFoundException fnfe) {
+            res.setMessage(fnfe.getMessage());
+            res.setStatus(HttpStatus.NOT_FOUND.value());
+            return new ResponseEntity<>(res, HttpStatus.OK);
         } catch (Exception e) {
-            if (e instanceof ValidationException) {
-                return ResponseCustom.response("Các trường không hợp lệ", HttpStatus.MULTI_STATUS, null, 0);
-            } else if (e instanceof SQLException || e instanceof SQLSyntaxErrorException) {
-                return ResponseCustom.response("Lỗi CSDL", HttpStatus.BAD_REQUEST, null, 0);
-            } else {
-                return ResponseCustom.response("Lỗi", HttpStatus.INTERNAL_SERVER_ERROR, null, 0);
-            }
+            res.setMessage("Lỗi hệ thống");
+            res.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            return new ResponseEntity<>(res, HttpStatus.OK);
         }
     }
 
     @DeleteMapping
     public ResponseEntity<Object> deleteBuildingById(@Valid @RequestParam long[] ids) {
+        ResponseCustom res = new ResponseCustom();
         try {
             for (long id : ids) {
                 userService.deleteUser(id);
             }
-            return ResponseCustom.response("Xóa thành công", HttpStatus.OK, "", 1);
+            res.setStatus(HttpStatus.OK.value());
+            res.setCode(1);
+            res.setMessage("Xóa thành công");
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        } catch (FileNotFoundException fnfe) {
+            res.setMessage(fnfe.getMessage());
+            res.setStatus(HttpStatus.NOT_FOUND.value());
+            return new ResponseEntity<>(res, HttpStatus.OK);
         } catch (Exception e) {
-            if (e instanceof ValidationException) {
-                return ResponseCustom.response("Các trường không hợp lệ", HttpStatus.MULTI_STATUS, null, 0);
-            } else if (e instanceof SQLException || e instanceof SQLSyntaxErrorException) {
-                return ResponseCustom.response("Lỗi CSDL", HttpStatus.BAD_REQUEST, null, 0);
-            } else {
-                return ResponseCustom.response("Lỗi", HttpStatus.INTERNAL_SERVER_ERROR, null, 0);
-            }
+            res.setMessage("Lỗi hệ thống");
+            res.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            return new ResponseEntity<>(res, HttpStatus.OK);
         }
-
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Object> findById(@PathVariable long id) {
+        ResponseCustom res = new ResponseCustom();
         try {
             UserModel userModel = new UserModel();
             userModel = userService.findById(id);
-            return (userModel != null) ? ResponseCustom.response("Get Data thành công", HttpStatus.OK, userModel, 1)
-                    : ResponseCustom.response("Không có dữ liệu", HttpStatus.NOT_FOUND, null, 1);
+            res.setMessage("Get data thành công");
+            res.setCode(1);
+            res.setData(userModel);
+            res.setStatus(HttpStatus.OK.value());
+            return new ResponseEntity<>(res, HttpStatus.OK);
+
+        } catch (SQLException sqle) {
+            res.setMessage("Lỗi truy vấn");
+            res.setStatus(HttpStatus.resolve(501).value());
+            return new ResponseEntity<>(res, HttpStatus.OK);
         } catch (Exception e) {
-            if (e instanceof SQLSyntaxErrorException) {
-                return ResponseCustom.response("Lỗi Truy Vấn", HttpStatus.BAD_REQUEST, null, 0);
-            } else if (e instanceof SQLException) {
-                return ResponseCustom.response("Lỗi CSDL", HttpStatus.BAD_REQUEST, null, 0);
-            } else {
-                return ResponseCustom.response("Lỗi hệ thống", HttpStatus.INTERNAL_SERVER_ERROR, null, 0);
-            }
+            res.setMessage("Lỗi hệ thống");
+            res.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            return new ResponseEntity<>(res, HttpStatus.OK);
         }
     }
 
     @GetMapping(value = "/user")
     public ResponseEntity<Object> findByAddress(@RequestParam(value = "address") String address) {
+        ResponseCustom res = new ResponseCustom();
         try {
             List<UserModel> userModel = new ArrayList<>();
             userModel = userService.findByAddress(address);
-            FieldNoVaildException.validate(address);
-            return (userModel.size() > 0) ? ResponseCustom.response("Get Data thành công", HttpStatus.OK, userModel, 1)
-                    : ResponseCustom.response("Không có dữ liệu", HttpStatus.NOT_FOUND, null, 1);
+            res.setData(userModel);
+            res.setStatus(HttpStatus.OK.value());
+            res.setCode(1);
+            res.setMessage("Biding success");
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        } catch (FieldErrorException fee) {
+            res.setStatus(ErrorCode.CHARACTER_ERROR);
+            res.setMessage(fee.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        } catch (SQLException sqle) {
+            res.setMessage("Lỗi truy vấn");
+            res.setStatus(HttpStatus.resolve(501).value());
+            return new ResponseEntity<>(res, HttpStatus.OK);
         } catch (Exception e) {
-            if (e instanceof SQLSyntaxErrorException) {
-                return ResponseCustom.response("Lỗi Truy Vấn", HttpStatus.BAD_REQUEST, null, 0);
-            } else if (e instanceof SQLException) {
-                return ResponseCustom.response("Lỗi CSDL", HttpStatus.BAD_REQUEST, null, 0);
-            } else if (e instanceof FieldNoVaildException) {
-                return ResponseCustom.response("Dữ liệu vừa nhập không hợp lệ", HttpStatus.BAD_REQUEST, null, 0);
-            } else {
-                return ResponseCustom.response("Lỗi hệ thống", HttpStatus.INTERNAL_SERVER_ERROR, null, 0);
-            }
+            res.setMessage("Lỗi hệ thống");
+            res.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            return new ResponseEntity<>(res, HttpStatus.OK);
         }
-
     }
 
+
     @GetMapping(value = "/")
-    public ResponseEntity<Object> findByName(@RequestParam(value = "name") String name){
+    public ResponseEntity<Object> findByName(@RequestParam(value = "name") String name) {
+        ResponseCustom res = new ResponseCustom();
         try {
-            FieldNoVaildException.validate(name);
             List<UserModel> userModel = new ArrayList<>();
             userModel = userService.findByName(name);
-            return (userModel.size() > 0) ? ResponseCustom.response("Get Data thành công", HttpStatus.OK, userModel, 1)
-                    : ResponseCustom.response("Không có dữ liệu", HttpStatus.NOT_FOUND, null, 1);
+            res.setData(userModel);
+            res.setStatus(HttpStatus.OK.value());
+            res.setCode(1);
+            res.setMessage("Biding success");
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        } catch (FieldErrorException fee) {
+            res.setStatus(ErrorCode.CHARACTER_ERROR);
+            res.setMessage(fee.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        } catch (SQLException sqle) {
+            res.setMessage("Lỗi truy vấn");
+            res.setStatus(HttpStatus.resolve(501).value());
+            return new ResponseEntity<>(res, HttpStatus.OK);
         } catch (Exception e) {
-            if (e instanceof SQLSyntaxErrorException) {
-                return ResponseCustom.response("Lỗi Truy Vấn", HttpStatus.BAD_REQUEST, null, 0);
-            } else if (e instanceof SQLException) {
-                return ResponseCustom.response("Lỗi CSDL", HttpStatus.BAD_REQUEST, null, 0);
-            }else if (e instanceof FieldNoVaildException) {
-                return ResponseCustom.response("Dữ liệu vừa nhập không hợp lệ", HttpStatus.BAD_REQUEST, null, 0);
-            }
-            else {
-                return ResponseCustom.response("Lỗi hệ thống", HttpStatus.INTERNAL_SERVER_ERROR, null, 0);
-            }
+            res.setMessage("Lỗi hệ thống");
+            res.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            return new ResponseEntity<>(res, HttpStatus.OK);
         }
     }
 
     @GetMapping(value = "/sort")
-    public ResponseEntity<Object> sortByName() throws SQLException {
-        return (userService.sortByName() != null) ? ResponseCustom.response("Sắp xếp thành công", HttpStatus.OK, userService.sortByName(), 1)
-                : ResponseCustom.response("Lỗi", HttpStatus.MULTI_STATUS, null, 0);
+    public ResponseEntity<Object> sortByName() throws Exception {
+        ResponseCustom res = new ResponseCustom();
+        try {
+            res.setMessage("Sắp xếp thành công");
+            res.setStatus(HttpStatus.OK.value());
+            res.setCode(1);
+            res.setData(userService.sortByName());
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        } catch (FileNotFoundException fnfe) {
+            res.setMessage(fnfe.getMessage());
+            res.setStatus(HttpStatus.NOT_FOUND.value());
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        } catch (Exception e) {
+            res.setMessage("Lỗi hệ thống");
+            res.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        }
+
     }
+
 }

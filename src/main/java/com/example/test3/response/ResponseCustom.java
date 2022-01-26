@@ -1,19 +1,55 @@
 package com.example.test3.response;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import com.example.test3.model.UserModel;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
-public class ResponseCustom {
-    public static ResponseEntity<Object> response(String message, HttpStatus status, Object responseObj,Integer integer) {
-        Map<String, Object> map = new HashMap<String, Object>();
-        map.put("code",status.value());
-        map.put("message", message);
-        map.put("status",integer);
-        map.put("data", responseObj);
-        return new ResponseEntity<Object>(map,status);
+public class ResponseCustom  {
+
+    private int status;
+    private int code;
+    private Object data;
+    private String message;
+
+    public ResponseCustom(int status, int code, Object data, String message) {
+        this.status = status;
+        this.code = code;
+        this.data = data;
+        this.message = message;
     }
 
+    public ResponseCustom() {
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    public int getCode() {
+        return code;
+    }
+
+    public void setCode(int code) {
+        this.code = code;
+    }
+
+    public Object getData() {
+        return data;
+    }
+
+    public void setData(Object data) {
+        this.data = data;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
 }
