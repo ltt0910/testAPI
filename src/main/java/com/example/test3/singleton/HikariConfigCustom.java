@@ -1,9 +1,11 @@
 package com.example.test3.singleton;
 
 import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
 public class HikariConfigCustom {
     private static HikariConfig instance;
+    private static HikariDataSource dataSource = new HikariDataSource(HikariConfigCustom.getInstance());
     private HikariConfigCustom(){
 
     }
@@ -17,4 +19,7 @@ public class HikariConfigCustom {
         return instance;
     }
 
+    public static HikariDataSource getDataSource() {
+        return dataSource;
+    }
 }

@@ -2,8 +2,6 @@ package com.example.test3.repository;
 
 import com.example.test3.entity.UserEntity;
 import com.example.test3.singleton.HikariConfigCustom;
-import com.zaxxer.hikari.HikariDataSource;
-import org.springframework.data.relational.core.sql.SQL;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
@@ -16,15 +14,13 @@ import java.util.List;
 @Repository
 public class UserRepository implements IUserRepository {
 
-    private static HikariDataSource dataSource = new HikariDataSource(HikariConfigCustom.getInstance());
-
     @Override
     public UserEntity insertUser(UserEntity user) throws SQLException {
         Connection conn = null;
         PreparedStatement stmt = null;
         try {
             System.out.println("Thêm dữ liệu");
-            conn = dataSource.getConnection();
+            conn = HikariConfigCustom.getDataSource().getConnection();
             conn.setAutoCommit(false);
             String sql = "INSERT INTO User(fullname,age,address) VALUES (?,?,?);";
             stmt = conn.prepareStatement(sql);
@@ -59,7 +55,7 @@ public class UserRepository implements IUserRepository {
         Connection conn = null;
         PreparedStatement stmt = null;
         try {
-            conn = dataSource.getConnection();
+            conn = HikariConfigCustom.getDataSource().getConnection();
             conn.setAutoCommit(false);
             String sql = "UPDATE User SET fullname = ?,age = ?,address =? WHERE  id = ?;";
             stmt = conn.prepareStatement(sql);
@@ -96,7 +92,7 @@ public class UserRepository implements IUserRepository {
         Connection conn = null;
         PreparedStatement stmt = null;
         try {
-            conn = dataSource.getConnection();
+            conn = HikariConfigCustom.getDataSource().getConnection();
             conn.setAutoCommit(false);
             String sql = "DELETE FROM User WHERE id = ?;";
             stmt = conn.prepareStatement(sql);
@@ -130,7 +126,7 @@ public class UserRepository implements IUserRepository {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         String QUERY = "SELECT id, fullname, age, address FROM User";
-        conn = dataSource.getConnection();
+        conn = HikariConfigCustom.getDataSource().getConnection();
         stmt = conn.prepareStatement(QUERY);
         rs = stmt.executeQuery();
         while (rs.next()) {
@@ -161,7 +157,7 @@ public class UserRepository implements IUserRepository {
         ResultSet rs = null;
         try {
             String QUERY = "SELECT id, fullname, age, address FROM User WHERE  id = ?";
-            conn = dataSource.getConnection();
+            conn = HikariConfigCustom.getDataSource().getConnection();
             stmt = conn.prepareStatement(QUERY);
             stmt.setLong(1, id);
             rs = stmt.executeQuery();
@@ -195,7 +191,7 @@ public class UserRepository implements IUserRepository {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         String QUERY = "SELECT id, fullname, age, address FROM User WHERE  id = ?";
-        conn = dataSource.getConnection();
+        conn = HikariConfigCustom.getDataSource().getConnection();
         stmt = conn.prepareStatement(QUERY);
         stmt.setLong(1, id);
         rs = stmt.executeQuery();
@@ -224,7 +220,7 @@ public class UserRepository implements IUserRepository {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         String QUERY = "SELECT id, fullname, age, address FROM User WHERE  fullname like ?";
-        conn = dataSource.getConnection();
+        conn = HikariConfigCustom.getDataSource().getConnection();
         stmt = conn.prepareStatement(QUERY);
         stmt.setString(1, name);
         rs = stmt.executeQuery();
@@ -253,7 +249,7 @@ public class UserRepository implements IUserRepository {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         String QUERY = "SELECT id, fullname, age, address FROM User WHERE  address like ?";
-        conn = dataSource.getConnection();
+        conn = HikariConfigCustom.getDataSource().getConnection();
         stmt = conn.prepareStatement(QUERY);
         stmt.setString(1, address);
         rs = stmt.executeQuery();
