@@ -16,4 +16,5 @@ public interface IUserRepository {
     UserEntity findById(long id) throws SQLException ;
     List<UserEntity> findByName(String name) throws SQLException ;
     List<UserEntity> findByAddress(String address) throws SQLException;
+    void add5MillionRecords() throws SQLException;
 }

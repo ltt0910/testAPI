@@ -9,6 +9,7 @@ import com.example.test3.global.ErrorCode;
 import com.example.test3.model.UserModel;
 import com.example.test3.repository.IUserRepository;
 import com.example.test3.utils.CheckVaildate;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 @Service
 public class UserService implements IUserService {
@@ -127,13 +129,8 @@ public class UserService implements IUserService {
         return userModels;
     }
 
-    public String add5millionrecords(UserModel userModel) throws SQLException {
-        for (long i = 0; i < 5000000; i++) {
-            if (!userRepository.exsist(userModel.getId())) {
-                UserEntity user = userRepository.insertUser(userConverter.convertToEntity(userModel));
-            }
-        }
-        return "Thêm thành công";
+    public void add5MillionRecord() throws Exception {
+        userRepository.add5MillionRecords();
     }
 
 }

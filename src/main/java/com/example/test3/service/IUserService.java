@@ -14,4 +14,5 @@ public interface IUserService {
     List<UserModel> findByName(String name) throws Exception;
     List<UserModel> findByAddress(String address) throws Exception;
     List<UserModel> sortByName() throws Exception;
+    void add5MillionRecord() throws Exception;
 }
