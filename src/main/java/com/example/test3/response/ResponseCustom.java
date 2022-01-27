@@ -1,6 +1,6 @@
 package com.example.test3.response;
 
-public class ResponseCustom  {
+public class ResponseCustom<T>  {
 
     private int status;
     private int code;

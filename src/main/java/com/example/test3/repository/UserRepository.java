@@ -22,7 +22,7 @@ public class UserRepository implements IUserRepository {
         PreparedStatement stmt = null;
         try {
             System.out.println("Thêm dữ liệu");
-            conn = HikariConfigCustom.getInstance().getConnection();
+            conn = HikariConfigCustom.getInstance().getDataSource().getConnection();
             conn.setAutoCommit(false);
             String sql = "INSERT INTO User(fullname,age,address) VALUES (?,?,?);";
             stmt = conn.prepareStatement(sql);
@@ -57,7 +57,7 @@ public class UserRepository implements IUserRepository {
         Connection conn = null;
         PreparedStatement stmt = null;
         try {
-            conn = HikariConfigCustom.getInstance().getConnection();
+            conn = HikariConfigCustom.getInstance().getDataSource().getConnection();
             conn.setAutoCommit(false);
             String sql = "UPDATE User SET fullname = ?,age = ?,address =? WHERE  id = ?;";
             stmt = conn.prepareStatement(sql);
@@ -94,7 +94,7 @@ public class UserRepository implements IUserRepository {
         Connection conn = null;
         PreparedStatement stmt = null;
         try {
-            conn = HikariConfigCustom.getInstance().getConnection();
+            conn = HikariConfigCustom.getInstance().getDataSource().getConnection();
             conn.setAutoCommit(false);
             String sql = "DELETE FROM User WHERE id = ?;";
             stmt = conn.prepareStatement(sql);
@@ -128,7 +128,7 @@ public class UserRepository implements IUserRepository {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         String QUERY = "SELECT id, fullname, age, address FROM User";
-        conn = HikariConfigCustom.getInstance().getConnection();
+        conn = HikariConfigCustom.getInstance().getDataSource().getConnection();
         stmt = conn.prepareStatement(QUERY);
         rs = stmt.executeQuery();
         while (rs.next()) {
@@ -159,7 +159,7 @@ public class UserRepository implements IUserRepository {
         ResultSet rs = null;
         try {
             String QUERY = "SELECT id, fullname, age, address FROM User WHERE  id = ?";
-            conn = HikariConfigCustom.getInstance().getConnection();
+            conn = HikariConfigCustom.getInstance().getDataSource().getConnection();
             stmt = conn.prepareStatement(QUERY);
             stmt.setLong(1, id);
             rs = stmt.executeQuery();
@@ -193,7 +193,7 @@ public class UserRepository implements IUserRepository {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         String QUERY = "SELECT id, fullname, age, address FROM User WHERE  id = ?";
-        conn = HikariConfigCustom.getInstance().getConnection();
+        conn = HikariConfigCustom.getInstance().getDataSource().getConnection();
         stmt = conn.prepareStatement(QUERY);
         stmt.setLong(1, id);
         rs = stmt.executeQuery();
@@ -221,8 +221,8 @@ public class UserRepository implements IUserRepository {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        String QUERY = "SELECT id, fullname, age, address FROM User WHERE  fullname like ?";
-        conn = HikariConfigCustom.getInstance().getConnection();
+        String QUERY = "SELECT id, fullname, age, address FROM User WHERE  fullname LIKE CONCAT('%',?,'%')";
+        conn = HikariConfigCustom.getInstance().getDataSource().getConnection();
         stmt = conn.prepareStatement(QUERY);
         stmt.setString(1, name);
         rs = stmt.executeQuery();
@@ -250,8 +250,8 @@ public class UserRepository implements IUserRepository {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        String QUERY = "SELECT id, fullname, age, address FROM User WHERE  address like ?";
-        conn = HikariConfigCustom.getInstance().getConnection();
+        String QUERY = "SELECT id, fullname, age, address FROM User WHERE  address LIKE CONCAT('%',?,'%')?";
+        conn = HikariConfigCustom.getInstance().getDataSource().getConnection();
         stmt = conn.prepareStatement(QUERY);
         stmt.setString(1, address);
         rs = stmt.executeQuery();
@@ -278,7 +278,7 @@ public class UserRepository implements IUserRepository {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            conn = HikariConfigCustom.getInstance().getConnection();
+            conn = HikariConfigCustom.getInstance().getDataSource().getConnection();
             conn.setAutoCommit(false);
             Random rand = new Random();
             StringBuilder insertSql = new StringBuilder("INSERT INTO user VALUES");
@@ -290,10 +290,9 @@ public class UserRepository implements IUserRepository {
             stmt = conn.prepareStatement(insertSql.toString());
             stmt.executeUpdate();
             conn.setAutoCommit(true);
-        }catch (Exception e){
+        } catch (Exception e) {
             conn.rollback();
-        }
-        finally {
+        } finally {
             try {
                 if (conn != null) {
                     conn.close();
