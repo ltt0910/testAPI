@@ -1,7 +1,9 @@
 package com.example.test3.service;
+
 import com.example.test3.converter.UserConverter;
 import com.example.test3.entity.UserEntity;
 import com.example.test3.exception.FieldErrorException;
+import com.example.test3.exception.MoneyNotValid;
 import com.example.test3.exception.UserExsitsException;
 import com.example.test3.exception.UserInfoException;
 import com.example.test3.global.ErrorCode;
@@ -12,11 +14,14 @@ import com.example.test3.utils.CheckVaildate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+
 import java.io.FileNotFoundException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 public class UserService implements IUserService {
@@ -25,6 +30,8 @@ public class UserService implements IUserService {
 
     @Autowired
     private UserConverter userConverter;
+
+    private ReentrantLock reentrantLock = new ReentrantLock();
 
     @Override
     public ResponseCustom<UserModel> addUser(UserModel userModel) throws Exception {
@@ -50,7 +57,7 @@ public class UserService implements IUserService {
             throw new FieldErrorException("Field không được có kí tự đặc biệt", ErrorCode.CHARACTER_ERROR);
         }
         if (!userRepository.exsist(userModel.getId())) {
-            throw new FileNotFoundException("Người dùng đã tồn tại");
+            throw new FileNotFoundException("Người dùng không tồn tại");
         }
         UserEntity user = userRepository.updateUser(userConverter.convertToEntity(userModel));
         return new ResponseCustom<>(1, HttpStatus.OK.value(), userConverter.convertToModel(user), "Update thành công");
@@ -124,12 +131,91 @@ public class UserService implements IUserService {
             userModels.add(userModel);
         }
         Collections.sort(userModels);
-        return new ResponseCustom<>(1,HttpStatus.OK.value(), userModels,"Sắp xếp thành công") ;
+        return new ResponseCustom<>(1, HttpStatus.OK.value(), userModels, "Sắp xếp thành công");
     }
 
     @Override
-    public void add5MillionRecord() throws Exception {
+    public ResponseCustom<String> add5MillionRecord() throws Exception {
+        userRepository.add5MillionRecords();
+        return new ResponseCustom<>(1, HttpStatus.OK.value(), "Thêm thành công", "Thêm thành công");
+    }
+
+    @Override
+    public ResponseCustom<List<UserModel>> findByNameStartWith(String name) throws Exception {
+        List<UserModel> userModels = new ArrayList<>();
+        List<UserEntity> userEntities = userRepository.findByNameStartWith(name);
+        if (!CheckVaildate.checkVaild(name)) {
+            throw new FieldErrorException("Name không được chứa kí tự đặc biệt", ErrorCode.CHARACTER_ERROR);
+        }
+        for (UserEntity item : userEntities) {
+            userModels.add(userConverter.convertToModel(item));
+        }
+        return new ResponseCustom<>(1, HttpStatus.OK.value(), userModels, "Tìm kiếm thành công");
+    }
+
+    @Override
+    public ResponseCustom<List<UserModel>> findByNameContain(String name) throws Exception {
+        List<UserModel> userModels = new ArrayList<>();
+        List<UserEntity> userEntities = userRepository.findByNameContain(name);
+        if (!CheckVaildate.checkVaild(name)) {
+            throw new FieldErrorException("Name không được chứa kí tự đặc biệt", ErrorCode.CHARACTER_ERROR);
+        }
+        for (UserEntity item : userEntities) {
+            userModels.add(userConverter.convertToModel(item));
+        }
+        return new ResponseCustom<>(1, HttpStatus.OK.value(), userModels, "Tìm kiếm thành công");
+    }
+
+    @Override
+    public ResponseCustom<List<UserModel>> findByNameEqual(String name) throws Exception {
+        List<UserModel> userModels = new ArrayList<>();
+        List<UserEntity> userEntities = userRepository.findByNameEqual(name);
+        if (!CheckVaildate.checkVaild(name)) {
+            throw new FieldErrorException("Name không được chứa kí tự đặc biệt", ErrorCode.CHARACTER_ERROR);
+        }
+        for (UserEntity item : userEntities) {
+            userModels.add(userConverter.convertToModel(item));
+        }
+        return new ResponseCustom<>(1, HttpStatus.OK.value(), userModels, "Tìm kiếm thành công");
+    }
+
+    @Override
+    public ResponseCustom<UserModel> updateMoneyById(long id, long money) throws Exception {
+//        reentrantLock.lock();
+        if (!userRepository.exsist(id)) {
+            throw new FileNotFoundException("Người dùng không  tồn tại");
+        }
+        if (money < 0) {
+            throw new MoneyNotValid("Số tiền không hợp lệ", ErrorCode.MONEY_NOT_VALID);
+        }
+        UserEntity userEntity = userRepository.updateMoneyById(id, money);
+        UserModel userModel = userConverter.convertToModel(userEntity);
+//        reentrantLock.unlock();
+        return new ResponseCustom<>(1, HttpStatus.OK.value(), userModel, "Update thành công");
 
     }
+
+    @Override
+    public ResponseCustom<List<UserModel>> transferById(long id1, long id2, long money) throws Exception {
+        long moneyA = userRepository.getMoney(id1);
+        List<UserModel> userModels = new ArrayList<>();
+        if (!userRepository.exsist(id1) || !userRepository.exsist(id2)) {
+            throw new FileNotFoundException("Người dùng không  tồn tại");
+        }
+        if (money < 0 || moneyA < money) {
+            if (money < 0) {
+                throw new MoneyNotValid("Số tiền không hợp lệ", ErrorCode.MONEY_NOT_VALID);
+            } else {
+                throw new MoneyNotValid("Tài khoản không đủ", ErrorCode.MONEY_NOT_ENOUGH);
+            }
+        }
+        List<UserEntity> userEntities = userRepository.transferById(id1, id2, money);
+        for (UserEntity item : userEntities) {
+            UserModel userModel = userConverter.convertToModel(item);
+            userModels.add(userModel);
+        }
+        return new ResponseCustom<>(1, HttpStatus.OK.value(), userEntities, "Chuyển thành công");
+    }
+
 
 }

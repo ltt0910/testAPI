@@ -9,9 +9,11 @@ public class HikariConfigCustom {
     private static HikariConfig config = new HikariConfig();
 
     static {
-        config.setJdbcUrl("jdbc:mysql://localhost:3306/vccorp");
+        config.setJdbcUrl("jdbc:mysql://localhost:3306/vccorp?useSSL=false");
         config.setUsername("root");
         config.setPassword("123456");
+        config.setMaximumPoolSize(40);
+        config.setMinimumIdle(30);
         dataSource = new HikariDataSource(config);
     }
     private HikariConfigCustom(){

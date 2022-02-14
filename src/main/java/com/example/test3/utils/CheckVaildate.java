@@ -7,7 +7,7 @@ public class CheckVaildate {
         if (s == null || s.trim().isEmpty()) {
             return false;
         }
-        Pattern p = Pattern.compile("[^A-Za-z]");
+        Pattern p = Pattern.compile("[^A-Za-z ]");
         Matcher m = p.matcher(s);
         boolean b = m.find();
         if (b == true)

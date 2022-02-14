@@ -5,15 +5,18 @@ public class UserEntity {
     private int age;
     private String fullname;
     private String address;
+    private Long money;
+
 
     public UserEntity() {
     }
 
-    public UserEntity(long id, int age, String fullname, String address) {
+    public UserEntity(long id, int age, String fullname, String address, Long money) {
         this.id = id;
         this.age = age;
         this.fullname = fullname;
         this.address = address;
+        this.money = money;
     }
 
     public long getId() {
@@ -46,5 +49,13 @@ public class UserEntity {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public Long getMoney() {
+        return money;
+    }
+
+    public void setMoney(Long money) {
+        this.money = money;
     }
 }

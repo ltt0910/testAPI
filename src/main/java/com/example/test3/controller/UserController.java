@@ -1,6 +1,7 @@
 package com.example.test3.controller;
 
 import com.example.test3.exception.FieldErrorException;
+import com.example.test3.exception.MoneyNotValid;
 import com.example.test3.exception.UserExsitsException;
 import com.example.test3.exception.UserInfoException;
 import com.example.test3.model.UserModel;
@@ -52,7 +53,7 @@ public class UserController {
 
     @PutMapping
     public ResponseEntity<Object> updateUser(@Valid @RequestBody UserModel user) {
-        ResponseCustom res ;
+        ResponseCustom res;
         try {
             res = userService.updateUser(user);
         } catch (FieldErrorException fee) {
@@ -126,7 +127,7 @@ public class UserController {
     }
 
     @GetMapping(value = "/sort")
-    public ResponseEntity<Object> sortByName(){
+    public ResponseEntity<Object> sortByName() {
         ResponseCustom res;
         try {
             res = new ResponseCustom(1, HttpStatus.OK.value(), userService.sortByName(), "Thành công");
@@ -139,10 +140,10 @@ public class UserController {
     }
 
     @PostMapping("/user")
-    public ResponseEntity<Object> inser5MillionRecord(){
+    public ResponseEntity<Object> inser5MillionRecord() {
         ResponseCustom res;
         try {
-            userService.add5MillionRecord();
+            res = userService.add5MillionRecord();
             res = new ResponseCustom(1, HttpStatus.OK.value(), "Ok", "Thêm thành công");
         } catch (SQLException sqle) {
             res = new ResponseCustom(0, HttpStatus.resolve(501).value(), null, sqle.getMessage());
@@ -151,5 +152,94 @@ public class UserController {
         }
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
+
+    @GetMapping("/startWith")
+    public ResponseEntity<Object> findByNameStartWith(@RequestParam(value = "name") String name) {
+        ResponseCustom res;
+        try {
+            res = new ResponseCustom(1, HttpStatus.OK.value(), userService.findByNameStartWith(name), "Thành công");
+        } catch (FieldErrorException fee) {
+            res = new ResponseCustom(0, fee.getCode(), null, fee.getMessage());
+        } catch (SQLException sqle) {
+            res = new ResponseCustom(0, HttpStatus.resolve(501).value(), null, sqle.getMessage());
+        } catch (Exception e) {
+            res = new ResponseCustom(0, HttpStatus.INTERNAL_SERVER_ERROR.value(), null, e.getMessage());
+        }
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+
+    @GetMapping("/contain")
+    public ResponseEntity<Object> findByNameContain(@RequestParam(value = "name") String name) {
+        ResponseCustom res;
+        try {
+            res = new ResponseCustom(1, HttpStatus.OK.value(), userService.findByNameContain(name), "Thành công");
+        } catch (FieldErrorException fee) {
+            res = new ResponseCustom(0, fee.getCode(), null, fee.getMessage());
+        } catch (SQLException sqle) {
+            res = new ResponseCustom(0, HttpStatus.resolve(501).value(), null, sqle.getMessage());
+        } catch (Exception e) {
+            res = new ResponseCustom(0, HttpStatus.INTERNAL_SERVER_ERROR.value(), null, e.getMessage());
+        }
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+
+    @GetMapping("/equal")
+    public ResponseEntity<Object> findByNameEqual(@RequestParam(value = "name") String name) {
+        ResponseCustom res;
+        try {
+            res = new ResponseCustom(1, HttpStatus.OK.value(), userService.findByNameEqual(name), "Thành công");
+        } catch (FieldErrorException fee) {
+            res = new ResponseCustom(0, fee.getCode(), null, fee.getMessage());
+        } catch (SQLException sqle) {
+            res = new ResponseCustom(0, HttpStatus.resolve(501).value(), null, sqle.getMessage());
+        } catch (Exception e) {
+            res = new ResponseCustom(0, HttpStatus.INTERNAL_SERVER_ERROR.value(), null, e.getMessage());
+        }
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+
+    //API cộng tiền cho User.
+    @PutMapping("/tranfer/{id}")
+    public ResponseEntity<Object> updateMoneyById(@PathVariable("id") long id,
+                                                  @RequestParam(value = "money") long money) {
+        ResponseCustom res;
+        try {
+            res = new ResponseCustom(1, HttpStatus.OK.value(), userService.updateMoneyById(id, money), "Thành công");
+        } catch (FieldErrorException fee) {
+            res = new ResponseCustom(0, fee.getCode(), null, fee.getMessage());
+        } catch (SQLException sqle) {
+            res = new ResponseCustom(0, HttpStatus.resolve(501).value(), null, sqle.getMessage());
+        } catch (FileNotFoundException fnfe) {
+            res = new ResponseCustom(0, HttpStatus.NOT_FOUND.value(), null, fnfe.getMessage());
+        } catch (MoneyNotValid mnv) {
+            res = new ResponseCustom(0, mnv.getCode(), null, mnv.getMessage());
+        } catch (Exception e) {
+            res = new ResponseCustom(0, HttpStatus.INTERNAL_SERVER_ERROR.value(), null, e.getMessage());
+        }
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+
+    //API chuyển tiền từ User A->B
+    @PutMapping("/tranfer/{id1}/{id2}")
+    public ResponseEntity<Object> transferById(@PathVariable("id1") long id1,
+                                               @PathVariable("id2") long id2,
+                                               @RequestParam(value = "money") long money) {
+        ResponseCustom res;
+        try {
+            res = new ResponseCustom(1, HttpStatus.OK.value(), userService.transferById(id1, id2, money), "Thành công");
+        } catch (FieldErrorException fee) {
+            res = new ResponseCustom(0, fee.getCode(), null, fee.getMessage());
+        } catch (SQLException sqle) {
+            res = new ResponseCustom(0, HttpStatus.resolve(501).value(), null, sqle.getMessage());
+        } catch (FileNotFoundException fnfe) {
+            res = new ResponseCustom(0, HttpStatus.NOT_FOUND.value(), null, fnfe.getMessage());
+        } catch (MoneyNotValid mnv) {
+            res = new ResponseCustom(0, mnv.getCode(), null, mnv.getMessage());
+        } catch (Exception e) {
+            res = new ResponseCustom(0, HttpStatus.INTERNAL_SERVER_ERROR.value(), null, e.getMessage());
+        }
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+
 
 }

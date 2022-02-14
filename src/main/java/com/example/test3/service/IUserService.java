@@ -23,5 +23,17 @@ public interface IUserService {
 
     ResponseCustom<List<UserModel>> sortByName() throws Exception;
 
-    void add5MillionRecord() throws Exception;
+    ResponseCustom<String> add5MillionRecord() throws Exception;
+
+    ResponseCustom<List<UserModel>> findByNameStartWith(String name) throws Exception;
+
+    ResponseCustom<List<UserModel>> findByNameContain(String name) throws Exception;
+
+    ResponseCustom<List<UserModel>> findByNameEqual(String name) throws Exception;
+
+    ResponseCustom<UserModel> updateMoneyById(long id, long money) throws Exception;
+
+    ResponseCustom<List<UserModel>> transferById(long id1, long id2, long money) throws Exception;
+
+
 }
