@@ -153,6 +153,7 @@ public class UserController {
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
+    // API tìm kiếm user có tên bắt đầu bằng ký tự A
     @GetMapping("/startWith")
     public ResponseEntity<Object> findByNameStartWith(@RequestParam(value = "name") String name) {
         ResponseCustom res;
@@ -168,6 +169,7 @@ public class UserController {
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
+    // API tìm kiếm user có tên chứa ký tự A
     @GetMapping("/contain")
     public ResponseEntity<Object> findByNameContain(@RequestParam(value = "name") String name) {
         ResponseCustom res;
@@ -183,6 +185,7 @@ public class UserController {
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
+    // API tìm kiếm user có tên A
     @GetMapping("/equal")
     public ResponseEntity<Object> findByNameEqual(@RequestParam(value = "name") String name) {
         ResponseCustom res;
@@ -223,10 +226,12 @@ public class UserController {
     @PutMapping("/tranfer/{id1}/{id2}")
     public ResponseEntity<Object> transferById(@PathVariable("id1") long id1,
                                                @PathVariable("id2") long id2,
+                                               @RequestParam(value = "versionA") long versionA,
+                                               @RequestParam(value = "versionB") long versionB,
                                                @RequestParam(value = "money") long money) {
         ResponseCustom res;
         try {
-            res = new ResponseCustom(1, HttpStatus.OK.value(), userService.transferById(id1, id2, money), "Thành công");
+            res = new ResponseCustom(1, HttpStatus.OK.value(), userService.transferById(id1, versionA, id2, versionB, money), "Thành công");
         } catch (FieldErrorException fee) {
             res = new ResponseCustom(0, fee.getCode(), null, fee.getMessage());
         } catch (SQLException sqle) {

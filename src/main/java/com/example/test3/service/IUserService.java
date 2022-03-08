@@ -1,5 +1,6 @@
 package com.example.test3.service;
 
+import com.example.test3.entity.UserEntity;
 import com.example.test3.model.UserModel;
 import com.example.test3.response.ResponseCustom;
 
@@ -33,7 +34,7 @@ public interface IUserService {
 
     ResponseCustom<UserModel> updateMoneyById(long id, long money) throws Exception;
 
-    ResponseCustom<List<UserModel>> transferById(long id1, long id2, long money) throws Exception;
+    ResponseCustom<List<UserModel>> transferById(long id1, Long versionA, long id2, Long versionB, long money) throws Exception;
 
 
 }

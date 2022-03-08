@@ -1,6 +1,7 @@
 package com.example.test3.repository;
 
 import com.example.test3.entity.UserEntity;
+import com.example.test3.model.UserModel;
 import org.springframework.stereotype.Repository;
 
 import java.sql.SQLException;
@@ -34,9 +35,10 @@ public interface IUserRepository {
 
     long getMoney(long id) throws SQLException;
 
-    UserEntity updateMoneyById(long id, long money) throws SQLException;
+    UserEntity addMoneyById(long id, long money) throws SQLException;
 
-    List<UserEntity> transferById(long id1, long id2, long money) throws SQLException;
+    List<UserEntity> tranferMoneyById(long id1, long versionA, long id2, long versionB, long money) throws SQLException, NumberFormatException;
+
 
     long getMoneyById(long id) throws SQLException;
 

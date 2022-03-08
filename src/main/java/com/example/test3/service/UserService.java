@@ -2,10 +2,7 @@ package com.example.test3.service;
 
 import com.example.test3.converter.UserConverter;
 import com.example.test3.entity.UserEntity;
-import com.example.test3.exception.FieldErrorException;
-import com.example.test3.exception.MoneyNotValid;
-import com.example.test3.exception.UserExsitsException;
-import com.example.test3.exception.UserInfoException;
+import com.example.test3.exception.*;
 import com.example.test3.global.ErrorCode;
 import com.example.test3.model.UserModel;
 import com.example.test3.repository.IUserRepository;
@@ -20,7 +17,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Service
@@ -126,8 +122,7 @@ public class UserService implements IUserService {
             throw new FileNotFoundException("Không có đối tượng để sắp xếp");
         }
         for (UserEntity item : userEntities) {
-            UserModel userModel = new UserModel();
-            userModel = userConverter.convertToModel(item);
+            UserModel userModel = userConverter.convertToModel(item);
             userModels.add(userModel);
         }
         Collections.sort(userModels);
@@ -181,41 +176,43 @@ public class UserService implements IUserService {
 
     @Override
     public ResponseCustom<UserModel> updateMoneyById(long id, long money) throws Exception {
-//        reentrantLock.lock();
         if (!userRepository.exsist(id)) {
             throw new FileNotFoundException("Người dùng không  tồn tại");
         }
         if (money < 0) {
             throw new MoneyNotValid("Số tiền không hợp lệ", ErrorCode.MONEY_NOT_VALID);
         }
-        UserEntity userEntity = userRepository.updateMoneyById(id, money);
+        UserEntity userEntity = userRepository.addMoneyById(id, money);
         UserModel userModel = userConverter.convertToModel(userEntity);
-//        reentrantLock.unlock();
         return new ResponseCustom<>(1, HttpStatus.OK.value(), userModel, "Update thành công");
 
     }
 
     @Override
-    public ResponseCustom<List<UserModel>> transferById(long id1, long id2, long money) throws Exception {
-        long moneyA = userRepository.getMoney(id1);
+    public ResponseCustom<List<UserModel>> transferById(long id1, Long versionA, long id2, Long versionB, long money) throws Exception {
         List<UserModel> userModels = new ArrayList<>();
+        UserEntity userA = userRepository.findById(id1);
+        UserEntity userB = userRepository.findById(id2);
+
         if (!userRepository.exsist(id1) || !userRepository.exsist(id2)) {
             throw new FileNotFoundException("Người dùng không  tồn tại");
         }
-        if (money < 0 || moneyA < money) {
+        if (money < 0 || userRepository.findById(id1).getMoney() < money) {
             if (money < 0) {
                 throw new MoneyNotValid("Số tiền không hợp lệ", ErrorCode.MONEY_NOT_VALID);
             } else {
                 throw new MoneyNotValid("Tài khoản không đủ", ErrorCode.MONEY_NOT_ENOUGH);
             }
         }
-        List<UserEntity> userEntities = userRepository.transferById(id1, id2, money);
+        if (versionA == null || versionB == null || versionA < userA.getVersion() || versionB < userB.getVersion()) {
+            throw new OptimisticLockingExeption("Lỗi version không hợp lệ");
+        }
+        List<UserEntity> userEntities = userRepository.tranferMoneyById(id1, versionA, id2, versionB, money);
         for (UserEntity item : userEntities) {
             UserModel userModel = userConverter.convertToModel(item);
             userModels.add(userModel);
         }
         return new ResponseCustom<>(1, HttpStatus.OK.value(), userEntities, "Chuyển thành công");
     }
-
 
 }

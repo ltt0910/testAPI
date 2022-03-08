@@ -1,8 +1,10 @@
 package com.example.test3.repository;
 
 import com.example.test3.entity.UserEntity;
+import com.example.test3.model.UserModel;
 import com.example.test3.singleton.HikariConfigCustom;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,8 +14,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+@Transactional
 @Repository
 public class UserRepository implements IUserRepository {
+
 
     @Override
     public UserEntity insertUser(UserEntity user) throws SQLException {
@@ -57,7 +61,7 @@ public class UserRepository implements IUserRepository {
         try {
             conn = HikariConfigCustom.getInstance().getDataSource().getConnection();
             conn.setAutoCommit(false);
-            String sql = "UPDATE User SET fullname = ?,age = ?,address =? WHERE  id = ?;";
+            String sql = "UPDATE User SET fullname = ?,age = ?,address =?,money = ? WHERE  id = ?;";
             stmt = conn.prepareStatement(sql);
             stmt.setString(1, user.getFullname());
             stmt.setInt(2, user.getAge());
@@ -189,7 +193,7 @@ public class UserRepository implements IUserRepository {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         conn = HikariConfigCustom.getInstance().getDataSource().getConnection();
-        String query = "SELECT id, fullname, age, address,money FROM User WHERE  id = ?";
+        String query = "SELECT id, fullname, age, address,money, version FROM User WHERE  id = ?";
         stmt = conn.prepareStatement(query);
         stmt.setLong(1, id);
         rs = stmt.executeQuery();
@@ -199,6 +203,7 @@ public class UserRepository implements IUserRepository {
             userEntity.setFullname(rs.getString("fullname"));
             userEntity.setAddress(rs.getString("address"));
             userEntity.setMoney(rs.getLong("money"));
+            userEntity.setVersion(rs.getLong("version"));
         }
         if (conn != null) {
             conn.close();
@@ -231,9 +236,15 @@ public class UserRepository implements IUserRepository {
             userEntity.setAddress(rs.getString("address"));
             user.add(userEntity);
         }
-        if (conn != null) conn.close();
-        if (stmt != null) stmt.close();
-        if (rs != null) rs.close();
+        if (conn != null) {
+            conn.close();
+        }
+        if (stmt != null) {
+            stmt.close();
+        }
+        if (rs != null) {
+            rs.close();
+        }
 
         return user;
     }
@@ -257,10 +268,15 @@ public class UserRepository implements IUserRepository {
             userEntity.setAddress(rs.getString("address"));
             user.add(userEntity);
         }
-        if (conn != null) conn.close();
-        if (stmt != null) stmt.close();
-        if (rs != null) rs.close();
-
+        if (conn != null) {
+            conn.close();
+        }
+        if (stmt != null) {
+            stmt.close();
+        }
+        if (rs != null) {
+            rs.close();
+        }
         return user;
     }
 
@@ -324,6 +340,15 @@ public class UserRepository implements IUserRepository {
             userEntities.add(userEntity);
         }
         conn.setAutoCommit(true);
+        if (conn != null) {
+            conn.close();
+        }
+        if (statement != null) {
+            statement.close();
+        }
+        if (resultSet != null) {
+            resultSet.close();
+        }
         return userEntities;
     }
 
@@ -347,6 +372,15 @@ public class UserRepository implements IUserRepository {
             userEntities.add(userEntity);
         }
         conn.setAutoCommit(true);
+        if (conn != null) {
+            conn.close();
+        }
+        if (statement != null) {
+            statement.close();
+        }
+        if (resultSet != null) {
+            resultSet.close();
+        }
         return userEntities;
     }
 
@@ -369,6 +403,15 @@ public class UserRepository implements IUserRepository {
             userEntity.setAddress(resultSet.getString("address"));
             userEntities.add(userEntity);
         }
+        if (conn != null) {
+            conn.close();
+        }
+        if (statement != null) {
+            statement.close();
+        }
+        if (resultSet != null) {
+            resultSet.close();
+        }
         return userEntities;
     }
 
@@ -387,27 +430,16 @@ public class UserRepository implements IUserRepository {
         if (resultSet.next()) {
             money = resultSet.getLong("money");
         }
+        if (conn != null) {
+            conn.close();
+        }
+        if (statement != null) {
+            statement.close();
+        }
+        if (resultSet != null) {
+            resultSet.close();
+        }
         return money;
-    }
-
-    //update add money of user A
-    @Override
-    public UserEntity updateMoneyById(long id, long money) throws SQLException {
-        createLock();
-        UserEntity user = addMoneyById(id, money);
-        unlock();
-        return user;
-    }
-
-    //transfer A and B
-    @Override
-    public List<UserEntity> transferById(long id1, long id2, long money) throws SQLException {
-        List<UserEntity> userEntities = new ArrayList<>();
-        UserEntity userResultA = addMoneyById(id2, money);
-        UserEntity userResultB = subMoneyById(id1, money);
-        userEntities.add(userResultA);
-        userEntities.add(userResultB);
-        return userEntities;
     }
 
     //Get money of user  have id like this.
@@ -438,14 +470,14 @@ public class UserRepository implements IUserRepository {
     }
 
     //add money of user have id like this.
-    private UserEntity addMoneyById(long id, long moneyAdd) throws SQLException {
+    @Override
+    public UserEntity addMoneyById(long id, long moneyAdd) throws SQLException {
         PreparedStatement stmt = null;
         Connection conn = null;
         try {
             conn = HikariConfigCustom.getInstance().getDataSource().getConnection();
             conn.setAutoCommit(false);
             String sql = "UPDATE User SET money = money + ? WHERE  id = ?;";
-
             stmt = conn.prepareStatement(sql);
             stmt.setLong(1, moneyAdd);
             stmt.setLong(2, id);
@@ -457,6 +489,7 @@ public class UserRepository implements IUserRepository {
         } catch (SQLException e) {
             e.printStackTrace();
             conn.rollback();
+            return null;
         } finally {
             try {
                 if (conn != null) {
@@ -473,16 +506,57 @@ public class UserRepository implements IUserRepository {
     }
 
     //subtrastion money of user have id like this.
-    private UserEntity subMoneyById(long id, long moneySub) throws SQLException {
+    @Override
+    public List<UserEntity> tranferMoneyById(long id1, long versionA, long id2, long versionB, long money) throws SQLException, NumberFormatException {
+        List<UserEntity> result = new ArrayList<>();
+        try {
+            UserEntity userA = subMoneyById(id1, versionA, money);
+            result.add(userA);
+            int convertToInt = Integer.parseInt("abc");
+        } finally {
+            UserEntity userB = addMoney(id2, versionA, money);
+            result.add(userB);
+        }
+        return result;
+    }
+
+//    private Long getVersionById(long id) throws SQLException {
+//        PreparedStatement stmt = null;
+//        Connection conn = null;
+//        ResultSet rs = null;
+//        long version = 0;
+//        String sqlGetMoneyA = "SELECT version FROM user WHERE id = ?";
+//        conn = HikariConfigCustom.getInstance().getDataSource().getConnection();
+//        stmt = conn.prepareStatement(sqlGetMoneyA);
+//        stmt.setLong(1, id);
+//        rs = stmt.executeQuery();
+//        if (rs.next()) {
+//            version = rs.getLong("version");
+//        }
+//        if (conn != null) {
+//            conn.close();
+//        }
+//        if (stmt != null) {
+//            stmt.close();
+//        }
+//        if (rs != null) {
+//            rs.close();
+//        }
+//        return version;
+//    }
+
+    public UserEntity subMoneyById(long id, long versionOld, long moneySub) throws SQLException {
         PreparedStatement stmt = null;
         Connection conn = null;
         try {
+            UserEntity user = findById(id);
+            long moneyNew = user.getMoney() - moneySub;
             conn = HikariConfigCustom.getInstance().getDataSource().getConnection();
             conn.setAutoCommit(false);
-            String sql = "UPDATE User SET money =  money - ? WHERE  id = ?;";
+            String sql = "UPDATE User SET money = " + moneyNew + ",version =  version + 1  WHERE  id = ? and version = ?;";
             stmt = conn.prepareStatement(sql);
-            stmt.setLong(1, moneySub);
-            stmt.setLong(2, id);
+            stmt.setLong(1, id);
+            stmt.setLong(2, versionOld);
             stmt.executeUpdate();
             //bat commit
             conn.commit();
@@ -491,6 +565,7 @@ public class UserRepository implements IUserRepository {
         } catch (SQLException e) {
             e.printStackTrace();
             conn.rollback();
+            return null;
         } finally {
             try {
                 if (conn != null) {
@@ -506,35 +581,40 @@ public class UserRepository implements IUserRepository {
         return findById(id);
     }
 
-    private void createLock() throws SQLException {
+    public UserEntity addMoney(long id, long versionOld, long moneyAdd) throws SQLException {
         PreparedStatement stmt = null;
         Connection conn = null;
-        conn = HikariConfigCustom.getInstance().getDataSource().getConnection();
-        String sql = "LOCK TABLE USER WRITE ;";
-        stmt = conn.prepareStatement(sql);
-        stmt.executeUpdate();
-        if (conn != null) {
-            conn.close();
+        try {
+            UserEntity user = findById(id);
+            long moneyNew = user.getMoney() + moneyAdd;
+            conn = HikariConfigCustom.getInstance().getDataSource().getConnection();
+            conn.setAutoCommit(false);
+            String sql = "UPDATE User SET money = " + moneyNew + ",version = version + 1  WHERE  id = ? and version = ?;";
+            stmt = conn.prepareStatement(sql);
+            stmt.setLong(1, id);
+            stmt.setLong(2, versionOld);
+            stmt.executeUpdate();
+            //bat commit
+            conn.commit();
+            //set lại auto Commit con conn
+            conn.setAutoCommit(true);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            conn.rollback();
+            return null;
+        } finally {
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+                if (stmt != null) {
+                    stmt.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
-        if (stmt != null) {
-            stmt.close();
-        }
+        return findById(id);
     }
-
-    private void unlock() throws SQLException {
-        PreparedStatement stmt = null;
-        Connection conn = null;
-        conn = HikariConfigCustom.getInstance().getDataSource().getConnection();
-        String sql = "UNLOCK TABLES;";
-        stmt = conn.prepareStatement(sql);
-        stmt.executeUpdate();
-        if (conn != null) {
-            conn.close();
-        }
-        if (stmt != null) {
-            stmt.close();
-        }
-    }
-
 
 }

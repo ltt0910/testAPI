@@ -9,24 +9,26 @@ public class HikariConfigCustom {
     private static HikariConfig config = new HikariConfig();
 
     static {
-        config.setJdbcUrl("jdbc:mysql://localhost:3306/vccorp?useSSL=false");
+        config.setJdbcUrl("jdbc:mysql://localhost:3306/vccorp?allowPublicKeyRetrieval=true&useSSL=false");
         config.setUsername("root");
         config.setPassword("123456");
-        config.setMaximumPoolSize(40);
-        config.setMinimumIdle(30);
+        config.setMaximumPoolSize(50);
+        config.setMinimumIdle(20);
         dataSource = new HikariDataSource(config);
     }
-    private HikariConfigCustom(){
+
+    private HikariConfigCustom() {
 
     }
+
     public static HikariConfigCustom getInstance() {
-        if(hikariConfigCustom==null){
+        if (hikariConfigCustom == null) {
             hikariConfigCustom = new HikariConfigCustom();
         }
         return hikariConfigCustom;
     }
 
-    public HikariDataSource getDataSource(){
+    public HikariDataSource getDataSource() {
         return dataSource;
     }
 
