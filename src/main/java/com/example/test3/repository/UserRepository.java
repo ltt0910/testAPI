@@ -508,64 +508,41 @@ public class UserRepository implements IUserRepository {
     //subtrastion money of user have id like this.
     @Override
     public List<UserEntity> tranferMoneyById(long id1, long versionA, long id2, long versionB, long money) throws SQLException, NumberFormatException {
-        List<UserEntity> result = new ArrayList<>();
-        try {
-            UserEntity userA = subMoneyById(id1, versionA, money);
-            result.add(userA);
-            int convertToInt = Integer.parseInt("abc");
-        } finally {
-            UserEntity userB = addMoney(id2, versionA, money);
-            result.add(userB);
-        }
-        return result;
-    }
-
-//    private Long getVersionById(long id) throws SQLException {
-//        PreparedStatement stmt = null;
-//        Connection conn = null;
-//        ResultSet rs = null;
-//        long version = 0;
-//        String sqlGetMoneyA = "SELECT version FROM user WHERE id = ?";
-//        conn = HikariConfigCustom.getInstance().getDataSource().getConnection();
-//        stmt = conn.prepareStatement(sqlGetMoneyA);
-//        stmt.setLong(1, id);
-//        rs = stmt.executeQuery();
-//        if (rs.next()) {
-//            version = rs.getLong("version");
-//        }
-//        if (conn != null) {
-//            conn.close();
-//        }
-//        if (stmt != null) {
-//            stmt.close();
-//        }
-//        if (rs != null) {
-//            rs.close();
-//        }
-//        return version;
-//    }
-
-    public UserEntity subMoneyById(long id, long versionOld, long moneySub) throws SQLException {
+        List<UserEntity> ressult = new ArrayList<>();
         PreparedStatement stmt = null;
         Connection conn = null;
+        ResultSet rs = null;
         try {
-            UserEntity user = findById(id);
-            long moneyNew = user.getMoney() - moneySub;
+            UserEntity userA = findById(id1);
+            UserEntity userB = findById(id2);
+            long moneyNewOfUserA = userA.getMoney() - money;
+            long moneyNewOfUserB = userB.getMoney() + money;
             conn = HikariConfigCustom.getInstance().getDataSource().getConnection();
             conn.setAutoCommit(false);
-            String sql = "UPDATE User SET money = " + moneyNew + ",version =  version + 1  WHERE  id = ? and version = ?;";
-            stmt = conn.prepareStatement(sql);
-            stmt.setLong(1, id);
-            stmt.setLong(2, versionOld);
-            stmt.executeUpdate();
-            //bat commit
-            conn.commit();
-            //set lại auto Commit con conn
-            conn.setAutoCommit(true);
+            String sql1 = "UPDATE User SET money = " + moneyNewOfUserA + ",version =  version + 1  WHERE  id = ? and version = ?;";
+            stmt = conn.prepareStatement(sql1);
+            stmt.setLong(1, id1);
+            stmt.setLong(2, versionA);
+            int update1 = stmt.executeUpdate();
+            int update2 = 0;
+            if (update1 != 0) {
+                String sql2 = "UPDATE User SET money = " + moneyNewOfUserB + ",version =  version + 1  WHERE  id = ? and version = ?;";
+                stmt = conn.prepareStatement(sql2);
+                stmt.setLong(1, id2);
+                stmt.setLong(2, versionB);
+                update2 = stmt.executeUpdate();
+            }
+            if (update2 != 0) {
+                conn.commit();
+            } else {
+                conn.rollback();
+                return ressult;
+            }
+            ressult.add(findById(id1));
+            ressult.add(findById(id2));
         } catch (SQLException e) {
             e.printStackTrace();
             conn.rollback();
-            return null;
         } finally {
             try {
                 if (conn != null) {
@@ -578,43 +555,7 @@ public class UserRepository implements IUserRepository {
                 e.printStackTrace();
             }
         }
-        return findById(id);
-    }
-
-    public UserEntity addMoney(long id, long versionOld, long moneyAdd) throws SQLException {
-        PreparedStatement stmt = null;
-        Connection conn = null;
-        try {
-            UserEntity user = findById(id);
-            long moneyNew = user.getMoney() + moneyAdd;
-            conn = HikariConfigCustom.getInstance().getDataSource().getConnection();
-            conn.setAutoCommit(false);
-            String sql = "UPDATE User SET money = " + moneyNew + ",version = version + 1  WHERE  id = ? and version = ?;";
-            stmt = conn.prepareStatement(sql);
-            stmt.setLong(1, id);
-            stmt.setLong(2, versionOld);
-            stmt.executeUpdate();
-            //bat commit
-            conn.commit();
-            //set lại auto Commit con conn
-            conn.setAutoCommit(true);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            conn.rollback();
-            return null;
-        } finally {
-            try {
-                if (conn != null) {
-                    conn.close();
-                }
-                if (stmt != null) {
-                    stmt.close();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return findById(id);
+        return ressult;
     }
 
 }
